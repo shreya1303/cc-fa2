@@ -1,3 +1,74 @@
+
+
+==== src\components\AddBook.jsx ====
+
+import React, { useState } from "react";
+import dynamoDB from "../awsConfig";
+import { PutCommand } from "@aws-sdk/lib-dynamodb";
+
+const AddBook = () => {
+  const [bookID, setBookID] = useState("");
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [publishedDate, setPublishedDate] = useState("");
+
+  const addBook = async () => {
+    const params = {
+      TableName: "BooksTable",
+      Item: {
+        bookID,
+        title,
+        author,
+        publishedDate,
+      },
+    };
+
+    try {
+      const command = new PutCommand(params);
+      await dynamoDB.send(command);
+      alert("Book added successfully!");
+    } catch (error) {
+      console.error("Error adding book:", error);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Add Book</h2>
+      <input
+        type="text"
+        placeholder="Book ID"
+        value={bookID}
+        onChange={(e) => setBookID(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Author"
+        value={author}
+        onChange={(e) => setAuthor(e.target.value)}
+      />
+      <input
+        type="date"
+        placeholder="Published Date"
+        value={publishedDate}
+        onChange={(e) => setPublishedDate(e.target.value)}
+      />
+      <button onClick={addBook}>Add Book</button>
+    </div>
+  );
+};
+
+export default AddBook;
+
+
+==== src\components\BookList.jsx ====
+
 import React, { useEffect, useState } from "react";
 import dynamoDB from "../awsConfig";
 import {
@@ -102,71 +173,41 @@ const BookList = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto mt-6">
-      <h2 className="text-2xl font-bold mb-4">Book List</h2>
-      <ul className="space-y-4">
+    <div>
+      <h2>Book List</h2>
+      <ul>
         {books.map((book, index) => (
-          <li key={index} className="flex justify-between items-center">
-            <span>
-              {book.bookID} - {book.title} - {book.author} -{" "}
-              {book.publishedDate}
-            </span>
-            <div className="space-x-2">
-              <button
-                onClick={() => deleteBook(book.bookID)}
-                className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => startEditing(book)}
-                className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600"
-              >
-                Update
-              </button>
-            </div>
+          <li key={index}>
+            {book.bookID} - {book.title} - {book.author} - {book.publishedDate}
+            <button onClick={() => deleteBook(book.bookID)}>Delete</button>
+            <button onClick={() => startEditing(book)}>Update</button>
           </li>
         ))}
       </ul>
 
       {editingBookID && (
-        <div className="mt-6 bg-gray-100 p-4 rounded-lg">
-          <h3 className="text-lg font-bold mb-4">Update Book</h3>
+        <div>
+          <h3>Update Book</h3>
           <input
             type="text"
             placeholder="Title"
             value={updatedTitle}
             onChange={(e) => setUpdatedTitle(e.target.value)}
-            className="border rounded-lg p-2 w-full mb-4"
           />
           <input
             type="text"
             placeholder="Author"
             value={updatedAuthor}
             onChange={(e) => setUpdatedAuthor(e.target.value)}
-            className="border rounded-lg p-2 w-full mb-4"
           />
           <input
             type="date"
             placeholder="Published Date"
             value={updatedPublishedDate}
             onChange={(e) => setUpdatedPublishedDate(e.target.value)}
-            className="border rounded-lg p-2 w-full mb-4"
           />
-          <div className="space-x-2">
-            <button
-              onClick={updateBook}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setEditingBookID(null)}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-          </div>
+          <button onClick={updateBook}>Save</button>
+          <button onClick={() => setEditingBookID(null)}>Cancel</button>
         </div>
       )}
     </div>
@@ -174,3 +215,22 @@ const BookList = () => {
 };
 
 export default BookList;
+
+
+==== src\App.jsx ====
+
+import React from "react";
+import AddBook from "./components/AddBook";
+import BookList from "./components/BookList";
+
+const App = () => {
+  return (
+    <div>
+      <h1>Book Management Application</h1>
+      <AddBook />
+      <BookList />
+    </div>
+  );
+};
+
+export default App;
